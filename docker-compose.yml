@@ -31,17 +31,13 @@ services:
       - DB_USERNAME=${DB_USER:-phper}
       - DB_PASSWORD=${DB_PASS:-secret}
     networks:
-      - mynetwork  # Asignar la red
+      mynetwork:
+        ipv4_address: 10.200.1.10
 
   web:
     build:
       context: .
       dockerfile: ./infra/docker/nginx/Dockerfile
-    ports:
-      - target: 80
-        published: ${WEB_PORT:-80}
-        protocol: tcp
-        mode: host
     volumes:
       - type: volume
         source: php-fpm-socket
@@ -52,7 +48,8 @@ services:
         source: ./backend
         target: /backend
     networks:
-      - mynetwork  # Asignar la red
+      mynetwork:
+        ipv4_address: 10.200.1.20
 
   db:
     build:
@@ -75,18 +72,35 @@ services:
       - MYSQL_PASSWORD=${DB_PASS:-secret}
       - MYSQL_ROOT_PASSWORD=${DB_PASS:-secret}
     networks:
-      - mynetwork  # Asignar la red
-    mem_limit: 512m  # Ajusta según tus necesidades
-    cpus: 2  # Ajusta según tus necesidades
+      mynetwork:
+        ipv4_address: 10.200.1.30
+    mem_limit: 512m
+    cpus: 2
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./infra/docker/frontend/Dockerfile
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://netflix.localhost:8090
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    networks:
+      mynetwork:
+        ipv4_address: 10.200.1.50
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret}  # Corrección aquí
-    ports:
-      - "8080:80"
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret}
     networks:
-      - mynetwork  # Asignar la red
+      mynetwork:
+        ipv4_address: 10.200.1.40
 
 networks:
   mynetwork:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.200.1.0/24
