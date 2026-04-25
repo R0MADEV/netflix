@@ -152,13 +152,15 @@ export const Api = () => {
   }
 
   const apiGetImage = (img) => {
-    const data = `http://localhost/images/${img}`
-    return data
+    if (!img) return ''
+    if (img.startsWith('http')) return img
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/images/${img}`
   }
 
   const apiGetImageProfile = (img) => {
-    const data = `http://localhost/profiles/${img}`
-    return data
+    if (!img) return ''
+    if (img.startsWith('http')) return img
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/profiles/${img}`
   }
 
 

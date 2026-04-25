@@ -30,11 +30,30 @@ class DatabaseSeeder extends Seeder
         DB::table('films')->truncate();
         DB::table('categories')->truncate();
         DB::table('genres')->truncate();
+        DB::table('genre_film')->truncate();
+
         //Create data
         User::factory(4)->create();
-        Film::factory(200)->create();
         Categorie::factory(2)->create();
         Genre::factory(10)->create();
+        Film::factory(200)->create();
+
+        // Link films to genres
+        $filmIds = Film::pluck('id');
+        $genreIds = Genre::pluck('id');
+
+        foreach ($filmIds as $filmId) {
+            $randomGenres = $genreIds->random(rand(1, 3));
+            foreach ($randomGenres as $genreId) {
+                DB::table('genre_film')->insert([
+                    'film_id' => $filmId,
+                    'genre_id' => $genreId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

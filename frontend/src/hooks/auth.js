@@ -87,8 +87,8 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     axios
       .post('/login', props)
       .then(res => {
+        localStorage.setItem('auth_token', res.data.data.token)
         mutate()
-        console.log('token', res.data.data.token)
       })
       .catch(error => {
         if (error.response.status !== 422) throw error
@@ -141,6 +141,7 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     deleteCookie('id')
     deleteCookie('type')
     deleteCookie('accountId')
+    localStorage.removeItem('auth_token')
     if (!error) {
       await axios.post('/logout').then(() => {
         mutate()
