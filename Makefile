@@ -23,9 +23,13 @@ setup:
 	@make fresh
 	@echo ""
 	@echo "Proyecto listo en:"
-	@echo "  http://netflix.localhost:8090"
-	@echo "  http://netflix-front.localhost:8090"
-	@echo "  http://phpmyadmin.localhost:8090"
+	@echo "  http://netflix.localhost:8090         (API)"
+	@echo "  http://netflix-front.localhost:8090   (Frontend)"
+	@echo "  http://phpmyadmin.localhost:8090       (phpMyAdmin)"
+	@echo ""
+	@echo "Usuarios de prueba (password: romacode):"
+	@echo "  romacode@gmail.com  (provider/admin)"
+	@echo "  test@gmail.com      (client)"
 
 # ==========================================
 # CONTENEDORES

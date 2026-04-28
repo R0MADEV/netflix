@@ -33,6 +33,18 @@ class DatabaseSeeder extends Seeder
         DB::table('genre_film')->truncate();
 
         //Create data
+        User::factory()->create([
+            'name' => 'romacode',
+            'email' => 'romacode@gmail.com',
+            'password' => bcrypt('romacode'),
+            'role' => 'provider',
+        ]);
+        User::factory()->create([
+            'name' => 'test',
+            'email' => 'test@gmail.com',
+            'password' => bcrypt('romacode'),
+            'role' => 'client',
+        ]);
         User::factory(4)->create();
         Categorie::factory(2)->create();
         Genre::factory(10)->create();

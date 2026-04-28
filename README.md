@@ -23,6 +23,15 @@ That's it. `make setup` will:
 5. Wait for MySQL to be ready
 6. Run migrations and seeders
 
+## Test users
+
+All accounts use password `romacode`:
+
+| Email | Role |
+|-------|------|
+| `romacode@gmail.com` | Provider (admin) |
+| `test@gmail.com` | Client |
+
 Once done, the app is available at:
 
 | URL | Description |

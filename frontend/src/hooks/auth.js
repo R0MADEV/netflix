@@ -91,9 +91,14 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         mutate()
       })
       .catch(error => {
-        if (error.response.status !== 422) throw error
-
-        setErrors(Object.values(error.response.data.errors).flat())
+        const status = error.response?.status
+        if (status === 422) {
+          setErrors(Object.values(error.response.data.errors).flat())
+        } else if (status === 419) {
+          setErrors(['CSRF token mismatch. Recarga la página e intenta de nuevo.'])
+        } else {
+          setErrors([`Error ${status}: ${error.response?.data?.message || error.message}`])
+        }
       })
   }
 
@@ -143,9 +148,8 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     deleteCookie('accountId')
     localStorage.removeItem('auth_token')
     if (!error) {
-      await axios.post('/logout').then(() => {
-        mutate()
-      })
+      await csrf()
+      await axios.post('/logout').catch(() => {})
     }
     window.location.pathname = '/login'
   }

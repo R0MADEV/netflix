@@ -10,7 +10,7 @@ import { Api } from '@/hooks/api'
 const Banner = () => {
   const router = useRouter()
   const { getCookie } = useAuth()
-  const { apiGetShowRandomFilm, apiGetGenres, apiGetImage } = Api()
+  const { apiGetShowRandomFilm, apiGetGenres, apiGetImage, apiPostAddFilmList } = Api()
 
   if (typeof window !== 'undefined') {
     var accountId = getCookie('accountId')
