@@ -1,18 +1,39 @@
-up:
-	docker compose up -d
-build:
-	docker compose build --no-cache --force-rm
-init:
+# ==========================================
+# TRAEFIK
+# ==========================================
+traefik-up:
+	docker compose -f ../devproxy/docker/docker-compose.yml up -d
+traefik-down:
+	docker compose -f ../devproxy/docker/docker-compose.yml stop
+
+# ==========================================
+# SETUP — primera vez
+# ==========================================
+setup:
+	@make traefik-up
 	docker compose up -d --build
 	docker compose exec app composer install
-	docker compose exec app cp .env.example .env
+	@if [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; fi
 	docker compose exec app php artisan key:generate
 	docker compose exec app php artisan storage:link
 	docker compose exec app chmod -R 777 storage bootstrap/cache
+	@echo "Esperando a que MySQL esté listo..."
+	@until docker compose exec db mysql -uphper -psecret -e "SELECT 1" > /dev/null 2>&1; do sleep 2; done
+	@echo "MySQL listo."
 	@make fresh
-remake:
-	@make destroy
-	@make init
+	@echo ""
+	@echo "Proyecto listo en:"
+	@echo "  http://netflix.localhost:8090"
+	@echo "  http://netflix-front.localhost:8090"
+	@echo "  http://phpmyadmin.localhost:8090"
+
+# ==========================================
+# CONTENEDORES
+# ==========================================
+up:
+	docker compose up -d
+build:
+	docker compose build --no-cache
 stop:
 	docker compose stop
 down:
@@ -22,100 +43,69 @@ restart:
 	@make up
 destroy:
 	docker compose down --rmi all --volumes --remove-orphans
-destroy-volumes:
-	docker compose down --volumes --remove-orphans
 ps:
 	docker compose ps
+
+# ==========================================
+# LOGS
+# ==========================================
 logs:
-	docker compose logs
-logs-watch:
 	docker compose logs --follow
-log-web:
-	docker compose logs web
-log-web-watch:
-	docker compose logs --follow web
 log-app:
-	docker compose logs app
-log-app-watch:
 	docker compose logs --follow app
+log-web:
+	docker compose logs --follow web
+log-front:
+	docker compose logs --follow frontend
 log-db:
-	docker compose logs db
-log-db-watch:
 	docker compose logs --follow db
-web:
-	docker compose exec web ash
+
+# ==========================================
+# SHELLS
+# ==========================================
 app:
 	docker compose exec app bash
+web:
+	docker compose exec web ash
+front:
+	docker compose exec frontend sh
+db:
+	docker compose exec db bash
+sql:
+	docker compose exec db bash -c 'mysql -u $$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE'
+
+# ==========================================
+# BASE DE DATOS
+# ==========================================
 migrate:
 	docker compose exec app php artisan migrate
 fresh:
 	docker compose exec app php artisan migrate:fresh --seed
 seed:
 	docker compose exec app php artisan db:seed
-dacapo:
-	docker compose exec app php artisan dacapo
-rollback-test:
-	docker compose exec app php artisan migrate:fresh
-	docker compose exec app php artisan migrate:refresh
+rollback:
+	docker compose exec app php artisan migrate:rollback
 tinker:
 	docker compose exec app php artisan tinker
+
+# ==========================================
+# LARAVEL
+# ==========================================
+cache:
+	docker compose exec app php artisan optimize
+cache-clear:
+	docker compose exec app php artisan optimize:clear
 test:
 	docker compose exec app php artisan test
-optimize:
-	docker compose exec app php artisan optimize
-optimize-clear:
-	docker compose exec app php artisan optimize:clear
-cache:
-	docker compose exec app composer dump-autoload -o
-	@make optimize
-	docker compose exec app php artisan event:cache
-	docker compose exec app php artisan view:cache
-cache-clear:
-	docker compose exec app composer clear-cache
-	@make optimize-clear
-	docker compose exec app php artisan event:clear
-npm:
-	@make npm-install
+rate-clear:
+	docker compose exec app php artisan cache:clear
+
+# ==========================================
+# FRONTEND
+# ==========================================
 npm-install:
-	docker compose exec web npm install
+	docker compose exec frontend npm install
 npm-dev:
-	docker compose exec web npm run dev
-npm-watch:
-	docker compose exec web npm run watch
-npm-watch-poll:
-	docker compose exec web npm run watch-poll
-npm-hot:
-	docker compose exec web npm run hot
-yarn:
-	docker compose exec web yarn
-yarn-install:
-	@make yarn
-yarn-dev:
-	docker compose exec web yarn dev
-yarn-watch:
-	docker compose exec web yarn watch
-yarn-watch-poll:
-	docker compose exec web yarn watch-poll
-yarn-hot:
-	docker compose exec web yarn hot
-db:
-	docker compose exec db bash
-sql:
-	docker compose exec db bash -c 'mysql -u $$MYSQL_USER -p$$MYSQL_PASSWORD $$MYSQL_DATABASE'
-redis:
-	docker compose exec redis redis-cli
-ide-helper:
-	docker compose exec app php artisan clear-compiled
-	docker compose exec app php artisan ide-helper:generate
-	docker compose exec app php artisan ide-helper:meta
-	docker compose exec app php artisan ide-helper:models --nowrite
-dry-cs:
-	docker compose exec app ./vendor/bin/php-cs-fixer fix -v --diff --dry-run
-fix-cs:
-	docker compose exec app ./vendor/bin/php-cs-fixer fix -v --diff
-
-
-privileges mysql:
-	docker-compose exec db mysql -u root -p
-	GRANT ALL PRIVILEGES ON *.* TO 'phper'@'%' WITH GRANT OPTION;
-	FLUSH PRIVILEGES;
+	docker compose exec frontend npm run dev
+npm-build:
+	docker compose exec frontend npm run build
